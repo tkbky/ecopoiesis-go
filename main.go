@@ -65,8 +65,8 @@ type OpsWorksStack struct {
 
 func main() {
 	app := cli.NewApp()
-	app.Name = "ocopoiesis"
-	app.Usage = "Export existing AWS resources to Terraform style"
+	app.Name = "trf"
+	app.Usage = "Export AWS resources to Terraform resources"
 
 	app.Commands = []cli.Command{
 		{

@@ -34,7 +34,6 @@ _testmain.go
 vendor/
 
 # Ignore build
-ecopoiesis-go
-ecopoiesis
+trf
 
 # End of https://www.gitignore.io/api/go
