@@ -1,8 +1,39 @@
-hash: 894f40c99738a19beadf2f101b7b7f43bc958c75b84e624695f71b638658b459
-updated: 2017-01-01T00:05:12.002962733+08:00
+hash: 5ed1a0273e67b0ed4d8c646354a3763a327fd1f4f621855974f9ea36c45bf117
+updated: 2017-01-02T14:17:12.698045426+08:00
 imports:
 - name: github.com/aws/aws-sdk-go
   version: 36670f6ab1769ad77fa5f7e2c194398733503635
+  subpackages:
+  - aws
+  - aws/awserr
+  - aws/awsutil
+  - aws/client
+  - aws/client/metadata
+  - aws/corehandlers
+  - aws/credentials
+  - aws/credentials/ec2rolecreds
+  - aws/credentials/endpointcreds
+  - aws/credentials/stscreds
+  - aws/defaults
+  - aws/ec2metadata
+  - aws/endpoints
+  - aws/request
+  - aws/session
+  - aws/signer/v4
+  - private/protocol
+  - private/protocol/json/jsonutil
+  - private/protocol/jsonrpc
+  - private/protocol/query
+  - private/protocol/query/queryutil
+  - private/protocol/rest
+  - private/protocol/xml/xmlutil
+  - private/waiter
+  - service/opsworks
+  - service/sts
+- name: github.com/go-ini/ini
+  version: 6f66b0e091edb3c7b380f7c4f0f884274d550b67
+- name: github.com/jmespath/go-jmespath
+  version: bd40a432e4c76585ef6b72d3fd96fb9b6dc7b68d
 - name: github.com/urfave/cli
   version: 0bdeddeeb0f650497d603c4ad7b20cfe685682f6
 testImports: []

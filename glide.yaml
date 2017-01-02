@@ -1,4 +1,8 @@
-package: github.com/tkbky/ecopoiesis-go
+package: github.com/tkbky/trf
+license: MIT
+owners:
+  - name: Kher Yee, Ting
+    email: infcurious@gmail.com
 import:
 - package: github.com/urfave/cli
   version: ~1.19.1

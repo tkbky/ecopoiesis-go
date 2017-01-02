@@ -6,7 +6,7 @@ Export AWS resources to Terraform resources.
 
 This is built for fun only, not for production use, use [this](https://github.com/dtan4/terraforming) instead.
 
-## Pre-requisite
+## Prerequisites
 
 1. AWS credentials
 
@@ -31,5 +31,18 @@ This is built for fun only, not for production use, use [this](https://github.co
 ## Usage
 
 ```bash
-trf aos # Opsworks Stack
+trf aos # OpsWorks Stack
+trf aocl # OpsWorks Custom Layer
 ```
+
+## Contributing
+
+The normal workflow of adding a new resource
+
+1. Refer to [AWS Cli reference](http://docs.aws.amazon.com/cli/latest/reference/) for available commands & their response. e.g. for OpsWorks, http://docs.aws.amazon.com/cli/latest/reference/opsworks
+2. Refer to [AWS SDK for Go API documentation](http://docs.aws.amazon.com/sdk-for-go/api/service/) for how to issue a command via API.
+3. Refer to [Terraform AWS providers documentation](https://www.terraform.io/docs/providers/aws/) when defining a struct for a particular resource.
+
+## License
+
+[MIT License](https://opensource.org/licenses/MIT)
