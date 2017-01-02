@@ -11,7 +11,7 @@ import (
 	"github.com/urfave/cli"
 )
 
-type awsresource interface {
+type resource interface {
 	tf() string
 }
 
@@ -20,6 +20,11 @@ type Resource struct {
 	Kind string
 	Name string
 	Obj  interface{}
+}
+
+func (r *Resource) tf() string {
+	body, _ := json.MarshalIndent(r.Obj, "", "  ")
+	return fmt.Sprintf("resource  \"%s\" \"%s\" %s", r.Kind, r.Name, body)
 }
 
 // CustomCookbooksSource describes a custom cookbooks source
@@ -32,12 +37,7 @@ type CustomCookbooksSource struct {
 	Revision   *string `json:"revision"`
 }
 
-func (r *Resource) tf() string {
-	body, _ := json.MarshalIndent(r.Obj, "", "  ")
-	return fmt.Sprintf("resource  \"%s\" \"%s\" %s", r.Kind, r.Name, body)
-}
-
-// OpsWorksStack describe  an opsworks stack
+// OpsWorksStack describe an opsworks stack
 type OpsWorksStack struct {
 	ID                          *string                `json:"id"`
 	Name                        *string                `json:"name"`
@@ -63,6 +63,112 @@ type OpsWorksStack struct {
 	VPCID                       *string                `json:"vpc_id"`
 }
 
+// OpsWorksCustomLayer describes an opsworks custom layer
+type OpsWorksCustomLayer struct {
+	ID                       *string    `json:"id"`
+	Name                     *string    `json:"name"`
+	ShortName                *string    `json:"short_name"`
+	StackID                  *string    `json:"stack_id"`
+	AutoAssignElasticIPs     *bool      `json:"auto_assign_elastic_ips"`
+	AutoAssignPublicIPs      *bool      `json:"auto_assign_public_ips"`
+	CustomInstanceProfileArn *string    `json:"custom_instance_profile_arn"`
+	CustomSecurityGroupIDs   []*string  `json:"custom_security_group_ids"`
+	AutoHealing              *bool      `json:"auto_healing"`
+	InstallUpdatesOnBoot     *bool      `json:"install_updates_on_boot"`
+	ElasticLoadBalancer      *bool      `json:"elastic_load_balancer"`
+	DrainELBOnShutdown       *bool      `json:"drain_elb_on_shutdown"`
+	SystemPackages           []*string  `json:"system_packages"`
+	UseEBSOptimizedInstances *bool      `json:"use_ebs_optimized_instances"`
+	EBSVolume                *EBSVolume `json:"ebs_volume"`
+	CustomJSON               *string    `json:"custom_json"`
+	CustomConfigureRecipes   []*string  `json:"custom_configure_recipes"`
+	CustomDeployRecipes      []*string  `json:"custom_deploy_recipes"`
+	CustomSetupRecipes       []*string  `json:"custom_setup_recipes"`
+	CustomShutdownRecipes    []*string  `json:"custom_shutdown_recipes"`
+	CustomUndeployRecipes    []*string  `json:"custom_undeploy_recipes"`
+}
+
+// EBSVolume describes an ebs volume
+type EBSVolume struct {
+	MountPoint    *string `json:"mount_point"`
+	Size          *string `json:"size"`
+	NumberOfDisks *int    `json:"number_of_disks"`
+	RAIDLevel     *int    `json:"raid_level"`
+	VolumeType    *string `json:"type"`
+	IOPS          *int    `json:"iops"`
+}
+
+func newOpsWorksService() *opsworks.OpsWorks {
+	sess, err := session.NewSession(&aws.Config{Region: aws.String("ap-southeast-1")})
+
+	if err != nil {
+		panic(err)
+	}
+
+	return opsworks.New(sess)
+}
+
+func newOpsWorksStack(s *opsworks.Stack) OpsWorksStack {
+	stack := OpsWorksStack{
+		ID:                        s.StackId,
+		Name:                      s.Name,
+		Region:                    s.Region,
+		ServiceRoleArn:            s.ServiceRoleArn,
+		DefaultInstanceProfileArn: s.DefaultInstanceProfileArn,
+		AgentVersion:              s.AgentVersion,
+		BerkshelfVersion:          s.ChefConfiguration.BerkshelfVersion,
+		Color:                     s.Attributes["Color"],
+		DefaultAvailabilityZone:     s.DefaultAvailabilityZone,
+		ConfigurationManagerName:    s.ConfigurationManager.Name,
+		ConfigurationManagerVersion: s.ConfigurationManager.Version,
+		CustomCookbooksSource: &CustomCookbooksSource{
+			SourceType: s.CustomCookbooksSource.Type,
+			URL:        s.CustomCookbooksSource.Url,
+			Username:   s.CustomCookbooksSource.Username,
+			Password:   s.CustomCookbooksSource.Password,
+			SSHKey:     s.CustomCookbooksSource.SshKey,
+			Revision:   s.CustomCookbooksSource.Revision,
+		},
+		CustomJSON:                s.CustomJson,
+		DefaultOS:                 s.DefaultOs,
+		DefaultRootDeviceType:     s.DefaultRootDeviceType,
+		DefaultSSHKeyName:         s.DefaultSshKeyName,
+		DefaultSubnetID:           s.DefaultSubnetId,
+		HostnameTheme:             s.HostnameTheme,
+		ManageBerkshelf:           s.ChefConfiguration.ManageBerkshelf,
+		UseCustomCookbooks:        s.UseCustomCookbooks,
+		UseOpsworksSecurityGroups: s.UseOpsworksSecurityGroups,
+		VPCID: s.VpcId,
+	}
+
+	return stack
+}
+
+func newOpsWorksCustomLayer(l *opsworks.Layer) OpsWorksCustomLayer {
+	layer := OpsWorksCustomLayer{
+		ID:                       l.LayerId,
+		AutoAssignElasticIPs:     l.AutoAssignElasticIps,
+		AutoAssignPublicIPs:      l.AutoAssignPublicIps,
+		CustomInstanceProfileArn: l.CustomInstanceProfileArn,
+		CustomJSON:               l.CustomJson,
+		CustomSecurityGroupIDs:   l.CustomSecurityGroupIds,
+		AutoHealing:              l.EnableAutoHealing,
+		InstallUpdatesOnBoot:     l.InstallUpdatesOnBoot,
+		Name:                     l.Name,
+		SystemPackages:           l.Packages,
+		ShortName:                l.Shortname,
+		StackID:                  l.StackId,
+		UseEBSOptimizedInstances: l.UseEbsOptimizedInstances,
+		CustomConfigureRecipes:   l.CustomRecipes.Configure,
+		CustomDeployRecipes:      l.CustomRecipes.Deploy,
+		CustomSetupRecipes:       l.CustomRecipes.Setup,
+		CustomShutdownRecipes:    l.CustomRecipes.Shutdown,
+		CustomUndeployRecipes:    l.CustomRecipes.Undeploy,
+	}
+
+	return layer
+}
+
 func main() {
 	app := cli.NewApp()
 	app.Name = "trf"
@@ -71,16 +177,9 @@ func main() {
 	app.Commands = []cli.Command{
 		{
 			Name:  "aos",
-			Usage: "OpsWorks Stack Resource",
+			Usage: "OpsWorks Stack",
 			Action: func(c *cli.Context) error {
-				sess, err := session.NewSession(&aws.Config{Region: aws.String("ap-southeast-1")})
-
-				if err != nil {
-					fmt.Println("Fail to create session", err)
-					return err
-				}
-
-				svc := opsworks.New(sess)
+				svc := newOpsWorksService()
 
 				resp, err := svc.DescribeStacks(nil)
 
@@ -91,43 +190,45 @@ func main() {
 
 				var stacks []OpsWorksStack
 				for _, s := range resp.Stacks {
-					stack := OpsWorksStack{
-						ID:                        s.StackId,
-						Name:                      s.Name,
-						Region:                    s.Region,
-						ServiceRoleArn:            s.ServiceRoleArn,
-						DefaultInstanceProfileArn: s.DefaultInstanceProfileArn,
-						AgentVersion:              s.AgentVersion,
-						BerkshelfVersion:          s.ChefConfiguration.BerkshelfVersion,
-						Color:                     s.Attributes["Color"],
-						DefaultAvailabilityZone:     s.DefaultAvailabilityZone,
-						ConfigurationManagerName:    s.ConfigurationManager.Name,
-						ConfigurationManagerVersion: s.ConfigurationManager.Version,
-						CustomCookbooksSource: &CustomCookbooksSource{
-							SourceType: s.CustomCookbooksSource.Type,
-							URL:        s.CustomCookbooksSource.Url,
-							Username:   s.CustomCookbooksSource.Username,
-							Password:   s.CustomCookbooksSource.Password,
-							SSHKey:     s.CustomCookbooksSource.SshKey,
-							Revision:   s.CustomCookbooksSource.Revision,
-						},
-						CustomJSON:                s.CustomJson,
-						DefaultOS:                 s.DefaultOs,
-						DefaultRootDeviceType:     s.DefaultRootDeviceType,
-						DefaultSSHKeyName:         s.DefaultSshKeyName,
-						DefaultSubnetID:           s.DefaultSubnetId,
-						HostnameTheme:             s.HostnameTheme,
-						ManageBerkshelf:           s.ChefConfiguration.ManageBerkshelf,
-						UseCustomCookbooks:        s.UseCustomCookbooks,
-						UseOpsworksSecurityGroups: s.UseOpsworksSecurityGroups,
-						VPCID: s.VpcId,
-					}
-
-					stacks = append(stacks, stack)
+					stacks = append(stacks, newOpsWorksStack(s))
 				}
 
 				for _, s := range stacks {
 					resource := Resource{Kind: "aws_opsworks_stack", Name: *s.Name, Obj: s}
+					fmt.Printf("%s\n", resource.tf())
+				}
+
+				return nil
+			},
+		}, {
+			Name:  "aocl",
+			Usage: "Opsworks Custom Layer",
+			Action: func(c *cli.Context) error {
+				svc := newOpsWorksService()
+
+				resp, err := svc.DescribeStacks(nil)
+
+				if err != nil {
+					fmt.Println("Fail to describe stacks", err)
+					return err
+				}
+
+				var layers []OpsWorksCustomLayer
+				for _, s := range resp.Stacks {
+					resp, err := svc.DescribeLayers(&opsworks.DescribeLayersInput{StackId: aws.String(*s.StackId)})
+
+					if err != nil {
+						fmt.Printf("Fail to describe layer for stack `%s`: %s", s.StackId, err)
+						return err
+					}
+
+					for _, l := range resp.Layers {
+						layers = append(layers, newOpsWorksCustomLayer(l))
+					}
+				}
+
+				for _, l := range layers {
+					resource := Resource{Kind: "aws_opsworks_custom_layer", Name: *l.Name, Obj: l}
 					fmt.Printf("%s\n", resource.tf())
 				}
 
