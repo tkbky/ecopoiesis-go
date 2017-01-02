@@ -89,45 +89,45 @@ func main() {
 					return err
 				}
 
-				var opsworksStacks []OpsWorksStack
-				for _, stack := range resp.Stacks {
-					opsworksStack := OpsWorksStack{
-						ID:                        stack.StackId,
-						Name:                      stack.Name,
-						Region:                    stack.Region,
-						ServiceRoleArn:            stack.ServiceRoleArn,
-						DefaultInstanceProfileArn: stack.DefaultInstanceProfileArn,
-						AgentVersion:              stack.AgentVersion,
-						BerkshelfVersion:          stack.ChefConfiguration.BerkshelfVersion,
-						Color:                     stack.Attributes["Color"],
-						DefaultAvailabilityZone:     stack.DefaultAvailabilityZone,
-						ConfigurationManagerName:    stack.ConfigurationManager.Name,
-						ConfigurationManagerVersion: stack.ConfigurationManager.Version,
+				var stacks []OpsWorksStack
+				for _, s := range resp.Stacks {
+					stack := OpsWorksStack{
+						ID:                        s.StackId,
+						Name:                      s.Name,
+						Region:                    s.Region,
+						ServiceRoleArn:            s.ServiceRoleArn,
+						DefaultInstanceProfileArn: s.DefaultInstanceProfileArn,
+						AgentVersion:              s.AgentVersion,
+						BerkshelfVersion:          s.ChefConfiguration.BerkshelfVersion,
+						Color:                     s.Attributes["Color"],
+						DefaultAvailabilityZone:     s.DefaultAvailabilityZone,
+						ConfigurationManagerName:    s.ConfigurationManager.Name,
+						ConfigurationManagerVersion: s.ConfigurationManager.Version,
 						CustomCookbooksSource: &CustomCookbooksSource{
-							SourceType: stack.CustomCookbooksSource.Type,
-							URL:        stack.CustomCookbooksSource.Url,
-							Username:   stack.CustomCookbooksSource.Username,
-							Password:   stack.CustomCookbooksSource.Password,
-							SSHKey:     stack.CustomCookbooksSource.SshKey,
-							Revision:   stack.CustomCookbooksSource.Revision,
+							SourceType: s.CustomCookbooksSource.Type,
+							URL:        s.CustomCookbooksSource.Url,
+							Username:   s.CustomCookbooksSource.Username,
+							Password:   s.CustomCookbooksSource.Password,
+							SSHKey:     s.CustomCookbooksSource.SshKey,
+							Revision:   s.CustomCookbooksSource.Revision,
 						},
-						CustomJSON:                stack.CustomJson,
-						DefaultOS:                 stack.DefaultOs,
-						DefaultRootDeviceType:     stack.DefaultRootDeviceType,
-						DefaultSSHKeyName:         stack.DefaultSshKeyName,
-						DefaultSubnetID:           stack.DefaultSubnetId,
-						HostnameTheme:             stack.HostnameTheme,
-						ManageBerkshelf:           stack.ChefConfiguration.ManageBerkshelf,
-						UseCustomCookbooks:        stack.UseCustomCookbooks,
-						UseOpsworksSecurityGroups: stack.UseOpsworksSecurityGroups,
-						VPCID: stack.VpcId,
+						CustomJSON:                s.CustomJson,
+						DefaultOS:                 s.DefaultOs,
+						DefaultRootDeviceType:     s.DefaultRootDeviceType,
+						DefaultSSHKeyName:         s.DefaultSshKeyName,
+						DefaultSubnetID:           s.DefaultSubnetId,
+						HostnameTheme:             s.HostnameTheme,
+						ManageBerkshelf:           s.ChefConfiguration.ManageBerkshelf,
+						UseCustomCookbooks:        s.UseCustomCookbooks,
+						UseOpsworksSecurityGroups: s.UseOpsworksSecurityGroups,
+						VPCID: s.VpcId,
 					}
 
-					opsworksStacks = append(opsworksStacks, opsworksStack)
+					stacks = append(stacks, stack)
 				}
 
-				for _, stack := range opsworksStacks {
-					resource := Resource{Kind: "aws_opsworks_stack", Name: *stack.Name, Obj: stack}
+				for _, s := range stacks {
+					resource := Resource{Kind: "aws_opsworks_stack", Name: *s.Name, Obj: s}
 					fmt.Printf("%s\n", resource.tf())
 				}
 
