@@ -173,6 +173,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "trf"
 	app.Usage = "Export AWS resources to Terraform resources"
+	app.Version = VersionString()
 
 	app.Commands = []cli.Command{
 		{
