@@ -70,8 +70,8 @@ func main() {
 
 	app.Commands = []cli.Command{
 		{
-			Name:  "aocl",
-			Usage: "OpsWorks Custom Layer Resource",
+			Name:  "aos",
+			Usage: "OpsWorks Stack Resource",
 			Action: func(c *cli.Context) error {
 				sess, err := session.NewSession(&aws.Config{Region: aws.String("ap-southeast-1")})
 

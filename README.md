@@ -2,6 +2,10 @@
 
 Export AWS resources to Terraform resources.
 
+## Disclaimer
+
+This is built for fun only, not for production use, use [this](https://github.com/dtan4/terraforming) instead.
+
 ## Pre-requisite
 
 1. AWS credentials
@@ -27,5 +31,5 @@ Export AWS resources to Terraform resources.
 ## Usage
 
 ```bash
-trf aocl
+trf aos # Opsworks Stack
 ```
