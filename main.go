@@ -98,6 +98,44 @@ type EBSVolume struct {
 	IOPS          *int    `json:"iops"`
 }
 
+// OpsWorksApplication describes an application
+type OpsWorksApplication struct {
+	ID                 *string           `json:"id"`
+	Name               *string           `json:"name"`
+	ShortName          *string           `json:"short_name"`
+	StackID            *string           `json:"stack_id"`
+	AppType            *string           `json:"type"`
+	Description        *string           `json:"description"`
+	Domains            []*string         `json:"domains"`
+	Environment        []*Environment    `json:"environment"`
+	AppSource          *AppSource        `json:"app_source"`
+	EnableSSL          *bool             `json:"enable_ssl"`
+	SSLConfiguration   *SSLConfiguration `json:"ssl_configuration"`
+	DocumentRoot       *string           `json:"document_root"`
+	AutoBundleOnDeploy *string           `json:"auto_bundle_on_deploy"`
+	RailsEnv           *string           `json:"rails_env"`
+}
+
+// Environment describes an applicaiton environment
+type Environment struct {
+	Key    *string `json:"key"`
+	Value  *string `json:"value"`
+	Secure *bool   `json:"secure"`
+}
+
+// AppSource describes an application source
+type AppSource struct {
+	SourceType *string `json:"type"`
+	Revision   *string `json:"revision"`
+	URL        *string `json:"url"`
+}
+
+// SSLConfiguration describes an SSL configuration
+type SSLConfiguration struct {
+	PrivateKey  *string `json:"private_key"`
+	Certificate *string `json:"certificate"`
+}
+
 func newOpsWorksService() *opsworks.OpsWorks {
 	sess, err := session.NewSession(&aws.Config{Region: aws.String("ap-southeast-1")})
 
@@ -106,6 +144,41 @@ func newOpsWorksService() *opsworks.OpsWorks {
 	}
 
 	return opsworks.New(sess)
+}
+
+func newOpsWorksApplication(a *opsworks.App) OpsWorksApplication {
+	app := OpsWorksApplication{
+		ID:          a.AppId,
+		Name:        a.Name,
+		ShortName:   a.Shortname,
+		StackID:     a.StackId,
+		AppType:     a.Type,
+		Description: a.Description,
+		Domains:     a.Domains,
+		AppSource: &AppSource{
+			SourceType: a.AppSource.Type,
+			Revision:   a.AppSource.Revision,
+			URL:        a.AppSource.Url,
+		},
+		EnableSSL: a.EnableSsl,
+		SSLConfiguration: &SSLConfiguration{
+			PrivateKey:  a.SslConfiguration.PrivateKey,
+			Certificate: a.SslConfiguration.Certificate,
+		},
+		DocumentRoot:       a.Attributes["DocumentRoot"],
+		AutoBundleOnDeploy: a.Attributes["AutoBundleOnDeploy"],
+		RailsEnv:           a.Attributes["RailsEnv"],
+	}
+
+	for _, e := range a.Environment {
+		app.Environment = append(app.Environment, &Environment{
+			Key:    e.Key,
+			Value:  e.Value,
+			Secure: e.Secure,
+		})
+	}
+
+	return app
 }
 
 func newOpsWorksStack(s *opsworks.Stack) OpsWorksStack {
@@ -203,7 +276,7 @@ func main() {
 			},
 		}, {
 			Name:  "aocl",
-			Usage: "Opsworks Custom Layer",
+			Usage: "OpsWorks Custom Layer",
 			Action: func(c *cli.Context) error {
 				svc := newOpsWorksService()
 
@@ -230,6 +303,40 @@ func main() {
 
 				for _, l := range layers {
 					resource := Resource{Kind: "aws_opsworks_custom_layer", Name: *l.Name, Obj: l}
+					fmt.Printf("%s\n", resource.tf())
+				}
+
+				return nil
+			},
+		}, {
+			Name:  "aoa",
+			Usage: "OpsWorks Application",
+			Action: func(c *cli.Context) error {
+				svc := newOpsWorksService()
+
+				resp, err := svc.DescribeStacks(nil)
+
+				if err != nil {
+					fmt.Println("Fail to describe application", err)
+					return err
+				}
+
+				var apps []OpsWorksApplication
+				for _, s := range resp.Stacks {
+					resp, err := svc.DescribeApps(&opsworks.DescribeAppsInput{StackId: aws.String(*s.StackId)})
+
+					if err != nil {
+						fmt.Printf("Fail to describe layer for stack `%s`: %s", s.StackId, err)
+						return err
+					}
+
+					for _, a := range resp.Apps {
+						apps = append(apps, newOpsWorksApplication(a))
+					}
+				}
+
+				for _, a := range apps {
+					resource := Resource{Kind: "aws_opsworks_application", Name: *a.Name, Obj: a}
 					fmt.Printf("%s\n", resource.tf())
 				}
 
