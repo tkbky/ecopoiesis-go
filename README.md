@@ -31,9 +31,19 @@ This is built for fun only, not for production use, use [this](https://github.co
 ## Usage
 
 ```bash
-trf aos # OpsWorks Stack
-trf aocl # OpsWorks Custom Layer
+# Usage:
+# trf [global options] command [command options] [arguments...]
+
+trf aos # Get OpsWorks Stack resource
 ```
+
+## Available Resources
+
+| Command | Resource Name          |
+|---------|------------------------|
+| aos     | OpsWorks Stack         |
+| aocl    | OpsWorks Custom Layer  |
+| aoa     | OpsWorks Application   |
 
 ## Contributing
 
