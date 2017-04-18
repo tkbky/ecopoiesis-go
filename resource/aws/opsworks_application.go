@@ -1,6 +1,13 @@
 package awsresource
 
-import "github.com/aws/aws-sdk-go/service/opsworks"
+import (
+	"fmt"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/opsworks"
+	"github.com/aws/aws-sdk-go/service/opsworks/opsworksiface"
+	"github.com/tkbky/trf/tf"
+)
 
 // OpsWorksApplication describes an application
 type OpsWorksApplication struct {
@@ -53,8 +60,7 @@ type DataSource struct {
 	DataSourceDatabaseName *string `json:"data_source_database_name"`
 }
 
-// NewOpsWorksApplication returns an opsworks.App
-func NewOpsWorksApplication(a *opsworks.App) OpsWorksApplication {
+func newOpsWorksApplication(a *opsworks.App) OpsWorksApplication {
 	app := OpsWorksApplication{
 		ID:          a.AppId,
 		Name:        a.Name,
@@ -99,4 +105,37 @@ func NewOpsWorksApplication(a *opsworks.App) OpsWorksApplication {
 	}
 
 	return app
+}
+
+// DescribeOpsWorksApplication returns a tf string that describes opsworks custom layer
+func DescribeOpsWorksApplication(svc opsworksiface.OpsWorksAPI) ([]string, error) {
+	resp, err := svc.DescribeStacks(nil)
+
+	if err != nil {
+		fmt.Println("Fail to describe application", err)
+		return nil, err
+	}
+
+	var apps []OpsWorksApplication
+	for _, s := range resp.Stacks {
+		resp, err := svc.DescribeApps(&opsworks.DescribeAppsInput{StackId: aws.String(*s.StackId)})
+
+		if err != nil {
+			fmt.Printf("Fail to describe layer for stack `%s`: %s", *s.StackId, err)
+			return nil, err
+		}
+
+		for _, a := range resp.Apps {
+			apps = append(apps, newOpsWorksApplication(a))
+		}
+	}
+
+	output := []string{}
+
+	for _, a := range apps {
+		resource := tf.Resource{Kind: "aws_opsworks_application", Name: *a.Name, Obj: a}
+		output = append(output, fmt.Sprintf("%s", resource.Tf()))
+	}
+
+	return output, nil
 }

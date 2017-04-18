@@ -1,6 +1,12 @@
 package awsresource
 
-import "github.com/aws/aws-sdk-go/service/opsworks"
+import (
+	"fmt"
+
+	"github.com/aws/aws-sdk-go/service/opsworks"
+	"github.com/aws/aws-sdk-go/service/opsworks/opsworksiface"
+	"github.com/tkbky/trf/tf"
+)
 
 // CustomCookbooksSource describes a custom cookbooks source
 type CustomCookbooksSource struct {
@@ -38,8 +44,7 @@ type OpsWorksStack struct {
 	VPCID                       *string                `json:"vpc_id"`
 }
 
-// NewOpsWorksStack returns an opsworks.Stack
-func NewOpsWorksStack(s *opsworks.Stack) OpsWorksStack {
+func newOpsWorksStack(s *opsworks.Stack) OpsWorksStack {
 	stack := OpsWorksStack{
 		ID:                        s.StackId,
 		Name:                      s.Name,
@@ -73,4 +78,28 @@ func NewOpsWorksStack(s *opsworks.Stack) OpsWorksStack {
 	}
 
 	return stack
+}
+
+// DescribeOpsWorksStack returns a tf string that describes opsworks stacks
+func DescribeOpsWorksStack(svc opsworksiface.OpsWorksAPI) ([]string, error) {
+	resp, err := svc.DescribeStacks(nil)
+
+	if err != nil {
+		fmt.Println("Fail to describe stacks", err)
+		return nil, err
+	}
+
+	var stacks []OpsWorksStack
+	for _, s := range resp.Stacks {
+		stacks = append(stacks, newOpsWorksStack(s))
+	}
+
+	output := []string{}
+
+	for _, s := range stacks {
+		resource := tf.Resource{Kind: "aws_opsworks_stack", Name: *s.Name, Obj: s}
+		output = append(output, fmt.Sprintf("%s", resource.Tf()))
+	}
+
+	return output, nil
 }
