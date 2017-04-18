@@ -1,5 +1,7 @@
 # Trf
 
+[![Build Status](https://travis-ci.org/tkbky/trf.svg?branch=master)](https://travis-ci.org/tkbky/trf)
+
 Export AWS resources to Terraform resources.
 
 ## Disclaimer
